@@ -1,10 +1,10 @@
-import './TokenInput.css'
+import "./TokenInput.css";
 
 const TokenInput = ({
   label,
   value,
   onChange,
-  placeholder = '0.0',
+  placeholder = "0.0",
   selectedToken,
   onTokenClick,
   error,
@@ -20,7 +20,7 @@ const TokenInput = ({
       <div className="input-wrapper">
         <input
           type="text"
-          className={`amount-input ${error ? 'has-error' : ''}`}
+          className={`amount-input ${error ? "has-error" : ""}`}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
@@ -62,7 +62,7 @@ const TokenInput = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TokenInput
+export default TokenInput;

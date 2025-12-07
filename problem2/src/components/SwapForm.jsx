@@ -42,7 +42,7 @@ const SwapForm = () => {
   const [fromToken, setFromToken] = useState(initialValues.fromToken);
   const [toToken, setToToken] = useState(initialValues.toToken);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: prices, isLoading: isPricesLoading } = usePrices();
+  const { data: prices } = usePrices();
   const [selectingToken, setSelectingToken] = useState(fromToken);
   const [isRateReversed, setIsRateReversed] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -312,6 +312,12 @@ const SwapForm = () => {
                     }
                   : null
               }
+              onTokenClick={
+                fromTokenData?.symbol !== BASE_TOKEN
+                  ? () =>
+                      handleOpenModal({ currentToken: fromTokenData?.symbol })
+                  : undefined
+              }
             />
           )}
         />
@@ -351,8 +357,13 @@ const SwapForm = () => {
                     }
                   : null
               }
-              onTokenClick={() =>
-                handleOpenModal({ currentToken: selectedTokenData?.symbol })
+              onTokenClick={
+                selectedTokenData?.symbol !== BASE_TOKEN
+                  ? () =>
+                      handleOpenModal({
+                        currentToken: selectedTokenData?.symbol,
+                      })
+                  : undefined
               }
             />
           )}
