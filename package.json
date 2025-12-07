@@ -1,0 +1,17 @@
+{
+  "name": "99-code-challenge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "problem1": "node problem1/index.js",
+    "problem1:test": "jest problem1/index.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}
