@@ -125,6 +125,13 @@ const SwapForm = () => {
   }, [fromToken, toToken, fromAmount, toAmount]);
 
   const handleSwapTokens = () => {
+    if (!toToken) {
+      setError("toAmount", {
+        type: "manual",
+        message: "Please select a token first",
+      });
+      return;
+    }
     const tempToken = fromToken;
     setFromToken(toToken);
     setToToken(tempToken);
