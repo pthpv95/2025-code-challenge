@@ -5,13 +5,20 @@ import { formatCurrency, getTokenIconUrl } from "../utils";
 import "./SwapForm.css";
 import TokenInput from "./TokenInput";
 import TokenSelectModal from "./TokenSelectModal";
+import type { Token, SwapFormData } from "../types";
+import type { Price } from "../apis/services/prices.service";
 
 // Assume the swap pair is USDT/XXX or XXX/USDT, so the base token is USDT
 const BASE_TOKEN = "USDT";
 
 const SwapForm = () => {
   // Read initial values from URL
-  const getInitialValuesFromURL = () => {
+  const getInitialValuesFromURL = (): {
+    fromToken: string;
+    toToken: string;
+    fromAmount: string;
+    toAmount: string;
+  } => {
     const params = new URLSearchParams(window.location.search);
     return {
       fromToken: params.get("from") || BASE_TOKEN,
@@ -31,7 +38,7 @@ const SwapForm = () => {
     clearErrors,
     getValues,
     formState: { errors },
-  } = useForm({
+  } = useForm<SwapFormData>({
     mode: "onChange",
     defaultValues: {
       fromAmount: initialValues.fromAmount,
@@ -51,11 +58,11 @@ const SwapForm = () => {
   const fromAmount = useWatch({ control, name: "fromAmount" });
   const toAmount = useWatch({ control, name: "toAmount" });
 
-  const tokens = useMemo(() => {
+  const tokens = useMemo<Token[]>(() => {
     if (!prices) return [];
 
     // Create a map to get unique tokens with their latest prices
-    const tokenMap = new Map();
+    const tokenMap = new Map<string, Price>();
 
     prices.forEach((price) => {
       const existing = tokenMap.get(price.currency);
@@ -67,12 +74,14 @@ const SwapForm = () => {
     tokenMap.set(BASE_TOKEN, {
       currency: BASE_TOKEN,
       price: 1,
+      date: new Date().toISOString(),
     });
 
     return Array.from(tokenMap.values()).map((price) => ({
       symbol: price.currency,
       name: price.currency,
       price: price.price,
+      iconUrl: getTokenIconUrl(price.currency),
     }));
   }, [prices]);
 
@@ -81,7 +90,10 @@ const SwapForm = () => {
     return tokens.filter((token) => token.symbol !== BASE_TOKEN);
   }, [tokens]);
 
-  const rate = useMemo(() => {
+  const rate = useMemo<{
+    price: string | number;
+    currency: string | undefined;
+  } | null>(() => {
     if (!toToken) return null;
     if (prices?.length === 0 || !prices) return null;
     const tokenPrice = prices.find((price) => {
@@ -140,7 +152,7 @@ const SwapForm = () => {
     setValue("toAmount", tempAmount);
   };
 
-  const handleSwap = async (data) => {
+  const handleSwap = async (data: SwapFormData) => {
     console.log("Swapping", data.fromAmount, fromToken, "to", toToken);
 
     // Set loading state
@@ -174,12 +186,14 @@ const SwapForm = () => {
     return tokens.find((token) => token.symbol === fromToken);
   }, [tokens, fromToken]);
 
-  const handleOpenModal = ({ currentToken }) => {
-    setSelectingToken(currentToken);
+  const handleOpenModal = ({ currentToken }: { currentToken: string }) => {
+    if (currentToken) {
+      setSelectingToken(currentToken);
+    }
     setIsModalOpen(true);
   };
 
-  const handleSelectToken = (token) => {
+  const handleSelectToken = (token: Token) => {
     setToToken(token.symbol);
     // Clear errors when token is selected
     clearErrors("toAmount");
@@ -212,7 +226,10 @@ const SwapForm = () => {
     }
   };
 
-  const handleChangeFromAmount = (value, onChange) => {
+  const handleChangeFromAmount = (
+    value: string,
+    onChange: (value: string) => void
+  ) => {
     // Call react-hook-form's onChange to update form state
     onChange(value);
 
@@ -239,7 +256,10 @@ const SwapForm = () => {
     );
   };
 
-  const handleChangeToAmount = (value, onChange) => {
+  const handleChangeToAmount = (
+    value: string,
+    onChange: (value: string) => void
+  ) => {
     // Call react-hook-form's onChange to update form state
     onChange(value);
 
@@ -267,7 +287,7 @@ const SwapForm = () => {
   };
 
   // Validation function for amount inputs
-  const validateAmount = (value) => {
+  const validateAmount = (value: string): string | true => {
     if (!value || value === "") {
       return "Amount is required";
     }
@@ -282,7 +302,7 @@ const SwapForm = () => {
   };
 
   // Validation function for toAmount - requires token selection
-  const validateToAmount = (value) => {
+  const validateToAmount = (value: string): string | true => {
     if (!toToken) {
       return "Please select a token first";
     }
@@ -291,6 +311,18 @@ const SwapForm = () => {
 
   const handleRateClick = () => {
     setIsRateReversed(!isRateReversed);
+  };
+
+  const handleFromTokenClick = () => {
+    if (fromTokenData?.symbol !== BASE_TOKEN && fromTokenData?.symbol) {
+      handleOpenModal({ currentToken: fromTokenData.symbol });
+    }
+  };
+
+  const handleToTokenClick = () => {
+    if (selectedTokenData?.symbol !== BASE_TOKEN) {
+      handleOpenModal({ currentToken: selectedTokenData?.symbol || "" });
+    }
   };
 
   return (
@@ -311,20 +343,11 @@ const SwapForm = () => {
               value={value}
               onChange={(e) => handleChangeFromAmount(e.target.value, onChange)}
               error={errors.fromAmount?.message}
-              selectedToken={
-                fromTokenData
-                  ? {
-                      symbol: fromTokenData.symbol,
-                      iconUrl: getTokenIconUrl(fromTokenData.symbol),
-                    }
-                  : null
+              selectedToken={fromTokenData}
+              showSelectToken={
+                fromTokenData?.symbol !== BASE_TOKEN && !!fromTokenData?.symbol
               }
-              onTokenClick={
-                fromTokenData?.symbol !== BASE_TOKEN
-                  ? () =>
-                      handleOpenModal({ currentToken: fromTokenData?.symbol })
-                  : undefined
-              }
+              onTokenClick={handleFromTokenClick}
             />
           )}
         />
@@ -356,22 +379,9 @@ const SwapForm = () => {
               value={value}
               onChange={(e) => handleChangeToAmount(e.target.value, onChange)}
               error={errors.toAmount?.message}
-              selectedToken={
-                selectedTokenData
-                  ? {
-                      symbol: selectedTokenData.symbol,
-                      iconUrl: getTokenIconUrl(selectedTokenData.symbol),
-                    }
-                  : null
-              }
-              onTokenClick={
-                selectedTokenData?.symbol !== BASE_TOKEN
-                  ? () =>
-                      handleOpenModal({
-                        currentToken: selectedTokenData?.symbol,
-                      })
-                  : undefined
-              }
+              selectedToken={selectedTokenData}
+              showSelectToken={selectedTokenData?.symbol !== BASE_TOKEN}
+              onTokenClick={handleToTokenClick}
             />
           )}
         />

@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { pricesService } from '../apis/services/prices.service'
 
 const QUERY_KEYS = {
-  prices: ['prices'],
-  pricesByCurrency: ['prices', 'by-currency'],
-  currencyPrice: (currency) => ['prices', 'currency', currency],
+  prices: ['prices'] as const,
+  pricesByCurrency: ['prices', 'by-currency'] as const,
+  currencyPrice: (currency: string) => ['prices', 'currency', currency] as const,
 }
 
 /**

@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./TokenSelectModal.css";
 import { getTokenIconUrl } from "../utils";
+import type { Token } from "../types";
+
+interface TokenSelectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectToken: (token: Token) => void;
+  selectedToken: string;
+  tokens: Token[];
+}
 
 const TokenSelectModal = ({
   isOpen,
@@ -8,7 +17,7 @@ const TokenSelectModal = ({
   onSelectToken,
   selectedToken,
   tokens,
-}) => {
+}: TokenSelectModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTokens = useMemo(() => {
@@ -42,7 +51,7 @@ const TokenSelectModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         handleClose();
       }
@@ -59,12 +68,12 @@ const TokenSelectModal = ({
 
   if (!isOpen) return null;
 
-  const handleSelectToken = (token) => {
+  const handleSelectToken = (token: Token) => {
     onSelectToken(token);
     handleClose();
   };
 
-  const handleBackdropClick = (e) => {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       handleClose();
     }

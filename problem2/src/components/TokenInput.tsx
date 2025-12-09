@@ -1,4 +1,18 @@
+import { Token } from "../types";
 import "./TokenInput.css";
+
+interface TokenInputProps {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  selectedToken?: Token | null;
+  showSelectToken?: boolean;
+  onTokenClick?: () => void;
+  error?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
+}
 
 const TokenInput = ({
   label,
@@ -6,11 +20,12 @@ const TokenInput = ({
   onChange,
   placeholder = "0.0",
   selectedToken,
+  showSelectToken,
   onTokenClick,
   error,
   disabled = false,
   readOnly = false,
-}) => {
+}: TokenInputProps) => {
   return (
     <div className="input-container">
       <div className="input-header">
@@ -27,7 +42,7 @@ const TokenInput = ({
           disabled={disabled}
           readOnly={readOnly}
         />
-        {onTokenClick && (
+        {showSelectToken && (
           <button
             type="button"
             className="token-select"
@@ -50,7 +65,7 @@ const TokenInput = ({
             <span className="dropdown-arrow">▼</span>
           </button>
         )}
-        {!onTokenClick && selectedToken && (
+        {!showSelectToken && selectedToken && (
           <div className="token-select token-display">
             <img
               src={selectedToken.iconUrl}
